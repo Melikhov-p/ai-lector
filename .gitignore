@@ -1,0 +1,27 @@
+# === IDE and editor files ===
+# VSCode
+.vscode/
+# GoLand / IntelliJ
+.idea/
+# Sublime / JetBrains
+*.iml
+# macOS
+.DS_Store
+# Windows
+Thumbs.db
+# Linux
+*~
+
+# === Logs & debug files ===
+*.log
+*.tmp
+*.bak
+*.swp
+*.swm
+*.swo
+
+# === Go modules & dependencies ===
+/vendor/
+
+# === Linters cache ===
+/golangci-lint
