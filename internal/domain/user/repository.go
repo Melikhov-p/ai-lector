@@ -2,30 +2,29 @@ package user
 
 import (
 	"context"
+
+	"github.com/Melikhov-p/ai-lector/internal/domain/interest"
 )
 
 // Repository определяет интерфейс для работы с хранилищем пользователей
 type Repository interface {
-	// Create создаёт нового пользователя
-	Create(ctx context.Context, user *User) error
+	// SaveUser создаёт нового пользователя
+	SaveUser(ctx context.Context, user *User) error
 
-	// GetByID возвращает пользователя по внешнему ID
-	GetByID(ctx context.Context, userID int) (*User, error)
+	// GetUserByID возвращает пользователя по внешнему ID
+	GetUserByID(ctx context.Context, userID int64) (*User, error)
 
-	// // GetByEmail возвращает пользователя по email
-	// GetByEmail(ctx context.Context, email string) (*User, error)
+	GetUserByPhone(ctx context.Context, phone string) (*User, error)
 
-	GetByPhone(ctx context.Context, phone string) (*User, error)
-
-	Search(ctx context.Context, filter UserFilter) ([]*User, error)
+	SearchUser(ctx context.Context, filter UserFilter) ([]*User, error)
 
 	GetAllUsers(ctx context.Context) ([]*User, error)
 
-	// // Update обновляет данные пользователя
-	// Update(ctx context.Context, user *User) error
+	AddInterestToUser(ctx context.Context, userID int64, inter *interest.Interest) error
 
-	// // Delete удаляет пользователя по ID
-	// Delete(ctx context.Context, id int64) error
+	GetUserInterestsByID(ctx context.Context, userID int64) ([]*interest.Interest, error)
+
+	UpdateUser(ctx context.Context, user *User) error
 }
 
 // ListOptions опции для получения списка пользователей

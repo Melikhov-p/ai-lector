@@ -5,3 +5,6 @@ linters:
 		-w /client \
 		golangci/golangci-lint:v2.4.0 \
 		golangci-lint run ./... -c .golangci.yml
+
+run:
+	go run ./cmd/lector-server/main.go

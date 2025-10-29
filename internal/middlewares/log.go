@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (m *Middleware) WithLogging(h http.Handler) http.Handler {
+func (mw *Middleware) WithLogging(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 
@@ -24,7 +24,7 @@ func (m *Middleware) WithLogging(h http.Handler) http.Handler {
 
 		duration := time.Since(startTime)
 
-		m.logger.Info(
+		mw.logger.Info(
 			"",
 			zap.String("URI", r.RequestURI),
 			zap.String("METHOD", r.Method),
