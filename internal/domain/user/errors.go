@@ -23,7 +23,9 @@ var (
 	// ErrInterestNotFound возвращается, когда интерес не найден
 	ErrInterestNotFound = errors.New("interest not found")
 
-	// ErrPhonealreadyExist возвращается, когда пользователь с таким телефоном уже есть.
+	ErrUserInterestsEmpty = errors.New("user interests empty")
+
+	// ErrPhoneAlreadyExist возвращается, когда пользователь с таким телефоном уже есть.
 	ErrPhoneAlreadyExist = errors.New("user with this phone already exists")
 	ErrInvalidPassword   = errors.New("invalid password")
 )

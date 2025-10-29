@@ -176,14 +176,26 @@ func (a *UserApp) AddInterest(ctx context.Context, userID, interestID int64) err
 	const op = "app.UserApp.AddInterest"
 
 	var (
-		inter *interest.Interest
-		usr   *user.User
-		err   error
+		inter      *interest.Interest
+		userInters []*interest.Interest
+		usr        *user.User
+		err        error
 	)
 
 	usr, err = a.userService.GetByID(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("%s failed to get user by ID %w", op, err)
+	}
+
+	userInters, err = a.userService.GetInterests(ctx, usr)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) && !errors.Is(err, user.ErrUserInterestsEmpty) {
+		return fmt.Errorf("%s failed to find interests for user with ID %d with %w", op, userID, err)
+	}
+
+	usr.SetInterests(userInters)
+
+	if userHasInterest := a.userService.CheckUserInterestByID(usr, interestID); userHasInterest {
+		return user.ErrInterestAlreadyExists
 	}
 
 	inter, err = a.interestApp.GetInterestByID(ctx, interestID)

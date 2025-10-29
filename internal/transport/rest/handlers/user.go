@@ -301,6 +301,11 @@ func (uh *userHandlers) AddInterests(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		uh.log.Warn("failed to add interest", zap.Error(err))
 
+		if errors.Is(err, user.ErrInterestAlreadyExists) {
+			w.WriteHeader(http.StatusConflict)
+			return
+		}
+
 		if errors.Is(err, user.ErrUserNotFound) || errors.Is(err, user.ErrInterestNotFound) {
 			w.WriteHeader(http.StatusBadRequest)
 			return

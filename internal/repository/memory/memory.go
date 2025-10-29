@@ -165,5 +165,5 @@ func (s *Storage) GetUserInterestsByID(ctx context.Context, userID int64) ([]*in
 		return inter, nil
 	}
 
-	return nil, interest.ErrInterestNotFound
+	return nil, user.ErrUserInterestsEmpty
 }

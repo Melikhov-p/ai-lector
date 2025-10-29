@@ -168,10 +168,21 @@ func (s *Service) GetInterests(ctx context.Context, usr *User) ([]*interest.Inte
 
 	inters, err = s.repo.GetUserInterestsByID(ctx, usr.ID())
 	if err != nil {
-		return nil, fmt.Errorf("%s failed to get interests for user %w", op, err)
+		return []*interest.Interest{}, fmt.Errorf("%s failed to get interests for user %w", op, err)
 	}
 
 	return inters, nil
+}
+
+// CheckUserInterestByID проверяет наличие у пользователя интереса с указанным ID
+func (s *Service) CheckUserInterestByID(usr *User, interID int64) bool {
+	for _, i := range usr.Interests() {
+		if i.ID() == interID {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (s *Service) UpdateUser(ctx context.Context, usr *User, inDTO *dto.UpdateUserDTO) error {
