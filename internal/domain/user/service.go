@@ -161,6 +161,7 @@ func (s *Service) AddInterest(ctx context.Context, usr *User, inter *interest.In
 	return nil
 }
 
+// GetInterests получить интересы пользователя
 func (s *Service) GetInterests(ctx context.Context, usr *User) ([]int64, error) {
 	const op = "domain.UserService.GetInterests"
 
@@ -188,6 +189,7 @@ func (s *Service) CheckUserInterestByID(usr *User, interID int64) bool {
 	return false
 }
 
+// UpdateUser обновить пользователя
 func (s *Service) UpdateUser(ctx context.Context, usr *User, inDTO *dto.UpdateUserDTO) error {
 	const op = "domain.UserService.UpdateUser"
 
