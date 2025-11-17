@@ -200,7 +200,11 @@ func (s *Service) UpdateUser(ctx context.Context, usr *User, inDTO *dto.UpdateUs
 		usr.phone = inDTO.Phone
 	}
 	if inDTO.Email != "" {
-		usr.email = inDTO.Email
+		if util.IsValidEmail(inDTO.Email) {
+			usr.email = inDTO.Email
+		} else {
+			return ErrInvalidEmail
+		}
 	}
 	if inDTO.FirstName != "" {
 		usr.firstName = inDTO.FirstName

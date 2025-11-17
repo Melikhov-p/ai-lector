@@ -7,14 +7,14 @@ import (
 )
 
 // IsValidEmail проверяет корректность email
-func IsValidEmail(email string) error {
+func IsValidEmail(email string) bool {
 	// Простая регулярка для валидации email
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 
 	if emailRegex.MatchString(email) {
-		return nil
+		return true
 	} else {
-		return errors.New("invalid email")
+		return false
 	}
 }
 
