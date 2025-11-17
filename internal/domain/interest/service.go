@@ -20,16 +20,19 @@ func (s *Service) CreateInterest(ctx context.Context, name, emoji string) (*Inte
 	const op = "domain.Interest.CreateInterest"
 
 	var (
-		inter *Interest
-		err   error
+		inter      *Interest
+		newInterID int64
+		err        error
 	)
 
 	inter = NewInterest(name, emoji)
 
-	err = s.repo.SaveInterest(ctx, inter)
+	newInterID, err = s.repo.SaveInterest(ctx, inter)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
+
+	inter.SetID(newInterID)
 
 	return inter, nil
 }

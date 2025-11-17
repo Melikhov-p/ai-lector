@@ -13,6 +13,7 @@ import (
 	"github.com/Melikhov-p/ai-lector/internal/domain/user"
 	"github.com/Melikhov-p/ai-lector/internal/transport/rest/dto"
 	"github.com/Melikhov-p/ai-lector/internal/transport/rest/mapper"
+	"github.com/Melikhov-p/ai-lector/internal/transport/rest/responser"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
@@ -21,6 +22,7 @@ type userHandlers struct {
 	log         *zap.Logger
 	userApp     *app.UserApp
 	interestApp *app.InterestApp
+	resp        *responser.Responser
 }
 
 func newUserHandlers(l *zap.Logger, a *app.UserApp, i *app.InterestApp) *userHandlers {
@@ -28,6 +30,7 @@ func newUserHandlers(l *zap.Logger, a *app.UserApp, i *app.InterestApp) *userHan
 		log:         l,
 		userApp:     a,
 		interestApp: i,
+		resp:        responser.NewResponser(l),
 	}
 }
 
@@ -41,7 +44,7 @@ func (uh *userHandlers) CreateUser(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err = json.NewDecoder(r.Body).Decode(&inDTO); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		uh.resp.WriteError(w, http.StatusBadRequest, ErrBadRequest)
 		return
 	}
 
@@ -50,23 +53,17 @@ func (uh *userHandlers) CreateUser(w http.ResponseWriter, r *http.Request) {
 		uh.log.Error("error while creating new user", zap.Any("CreateDTO", inDTO), zap.Error(err))
 
 		if errors.Is(err, user.ErrPhoneAlreadyExist) {
-			w.WriteHeader(http.StatusConflict)
+			uh.resp.WriteError(w, http.StatusConflict, user.ErrPhoneAlreadyExist)
 			return
 		}
 
-		w.WriteHeader(http.StatusInternalServerError)
+		uh.resp.WriteError(w, http.StatusInternalServerError, ErrInternalServerError)
 		return
 	}
 
 	outDTO = mapper.FromUserToDTO(usr)
 
-	w.WriteHeader(http.StatusCreated)
-	if err = json.NewEncoder(w).Encode(outDTO); err != nil {
-		uh.log.Error("error while encoding outDTO", zap.Any("outDTO", outDTO), zap.Error(err))
-
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	uh.resp.WriteJSON(w, http.StatusCreated, outDTO)
 }
 
 func (uh *userHandlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -79,13 +76,13 @@ func (uh *userHandlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err = json.NewDecoder(r.Body).Decode(&inDTO); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		uh.resp.WriteError(w, http.StatusBadRequest, ErrBadRequest)
 		return
 	}
 
 	userID, err = strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		uh.resp.WriteError(w, http.StatusBadRequest, ErrBadRequest)
 		return
 	}
 
@@ -93,19 +90,16 @@ func (uh *userHandlers) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		uh.log.Error("error while updating user", zap.Any("UpdateUser", inDTO), zap.Error(err))
 		if errors.Is(err, user.ErrUserNotFound) {
-			w.WriteHeader(http.StatusNotFound)
+			uh.resp.WriteError(w, http.StatusNotFound, user.ErrUserNotFound)
 			return
 		}
 
-		w.WriteHeader(http.StatusInternalServerError)
+		uh.resp.WriteError(w, http.StatusInternalServerError, ErrInternalServerError)
 		return
 	}
 
 	outDTO = mapper.FromUserToDTO(usr)
-	if err = json.NewEncoder(w).Encode(outDTO); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	uh.resp.WriteJSON(w, http.StatusOK, outDTO)
 }
 
 func (uh *userHandlers) GetByID(w http.ResponseWriter, r *http.Request) {
@@ -119,7 +113,7 @@ func (uh *userHandlers) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	idStr = chi.URLParam(r, consts.UserIDURLParam.String())
 	if id, err = strconv.Atoi(idStr); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		uh.resp.WriteError(w, http.StatusBadRequest, ErrBadRequest)
 		return
 	}
 
@@ -127,20 +121,16 @@ func (uh *userHandlers) GetByID(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		uh.log.Warn("searching for user are not success", zap.Error(err))
 		if errors.Is(err, user.ErrUserNotFound) {
-			w.WriteHeader(http.StatusNotFound)
+			uh.resp.WriteError(w, http.StatusNotFound, user.ErrUserNotFound)
 			return
 		}
 
-		w.WriteHeader(http.StatusInternalServerError)
+		uh.resp.WriteError(w, http.StatusInternalServerError, ErrInternalServerError)
 		return
 	}
 
 	outDTO = mapper.FromUserToDTO(usr)
-	if err = json.NewEncoder(w).Encode(&outDTO); err != nil {
-		uh.log.Error("error while encoding to user DTO", zap.Error(err), zap.Any("DTO", outDTO))
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	uh.resp.WriteJSON(w, http.StatusOK, outDTO)
 }
 
 // UserList получение списка пользователей.
@@ -155,11 +145,11 @@ func (uh *userHandlers) UserList(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		uh.log.Warn("getting users list are not success", zap.Error(err))
 		if errors.Is(err, user.ErrUserNotFound) {
-			w.WriteHeader(http.StatusNotFound)
+			uh.resp.WriteError(w, http.StatusNotFound, user.ErrUserNotFound)
 			return
 		}
 
-		w.WriteHeader(http.StatusInternalServerError)
+		uh.resp.WriteError(w, http.StatusInternalServerError, ErrInternalServerError)
 		return
 	}
 
@@ -168,10 +158,7 @@ func (uh *userHandlers) UserList(w http.ResponseWriter, r *http.Request) {
 		outDTO.Users = append(outDTO.Users, &usrDTO)
 	}
 
-	if err = json.NewEncoder(w).Encode(outDTO); err != nil {
-		uh.log.Error("error while encoding out DTO", zap.Error(err), zap.Any("DTO", outDTO))
-		w.WriteHeader(http.StatusInternalServerError)
-	}
+	uh.resp.WriteJSON(w, http.StatusOK, outDTO)
 }
 
 // SearchUser поиск пользователя
@@ -194,11 +181,11 @@ func (uh *userHandlers) SearchUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		uh.log.Warn("searching for user are not success", zap.Error(err))
 		if errors.Is(err, user.ErrUserNotFound) {
-			w.WriteHeader(http.StatusNotFound)
+			uh.resp.WriteError(w, http.StatusNotFound, user.ErrUserNotFound)
 			return
 		}
 
-		w.WriteHeader(http.StatusInternalServerError)
+		uh.resp.WriteError(w, http.StatusInternalServerError, ErrInternalServerError)
 		return
 	}
 
@@ -207,10 +194,7 @@ func (uh *userHandlers) SearchUser(w http.ResponseWriter, r *http.Request) {
 		outDTO.Users = append(outDTO.Users, &usrDTO)
 	}
 
-	if err = json.NewEncoder(w).Encode(outDTO); err != nil {
-		uh.log.Error("error while decoding out DTO", zap.Error(err), zap.Any("DTO", outDTO))
-		w.WriteHeader(http.StatusInternalServerError)
-	}
+	uh.resp.WriteJSON(w, http.StatusOK, outDTO)
 }
 
 // Login аутентификация
@@ -224,14 +208,14 @@ func (uh *userHandlers) Login(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err = json.NewDecoder(r.Body).Decode(&inDTO); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		uh.resp.WriteError(w, http.StatusBadRequest, ErrBadRequest)
 		return
 	}
 
 	usr, err = uh.userApp.Auth(r.Context(), inDTO.Phone, inDTO.Password)
 	if err != nil {
 		uh.log.Warn("failed to authenticate user", zap.Error(err), zap.Any("inDTO", inDTO))
-		w.WriteHeader(http.StatusUnauthorized)
+		uh.resp.WriteError(w, http.StatusUnauthorized, ErrUnauthorized)
 		return
 	}
 
@@ -239,7 +223,7 @@ func (uh *userHandlers) Login(w http.ResponseWriter, r *http.Request) {
 	token, err = auth.BuildJWTToken(usr, "supersecretkey", 24*time.Hour)
 	if err != nil {
 		uh.log.Error("error while building jwt token", zap.Error(err), zap.Any("User", usr))
-		w.WriteHeader(http.StatusInternalServerError)
+		uh.resp.WriteError(w, http.StatusInternalServerError, ErrInternalServerError)
 		return
 	}
 
@@ -251,11 +235,7 @@ func (uh *userHandlers) Login(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 	})
 
-	if err = json.NewEncoder(w).Encode(&outDTO); err != nil {
-		uh.log.Error("error while encoding out DTO", zap.Error(err), zap.Any("DTO", outDTO))
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	uh.resp.WriteJSON(w, http.StatusOK, outDTO)
 }
 
 // Logout выход
@@ -269,7 +249,7 @@ func (uh *userHandlers) Logout(w http.ResponseWriter, _ *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 	})
 
-	w.WriteHeader(http.StatusOK)
+	uh.resp.WriteJSON(w, http.StatusOK, nil)
 }
 
 // AddInterests добавить пользователю интерес
@@ -285,7 +265,7 @@ func (uh *userHandlers) AddInterests(w http.ResponseWriter, r *http.Request) {
 	userID, ok = r.Context().Value(consts.UserIDContextKey).(int64)
 	if !ok {
 		uh.log.Error("invalid user ID in context", zap.Int64("UserID", userID))
-		w.WriteHeader(http.StatusBadRequest)
+		uh.resp.WriteError(w, http.StatusBadRequest, ErrBadRequest)
 		return
 	}
 
@@ -293,7 +273,7 @@ func (uh *userHandlers) AddInterests(w http.ResponseWriter, r *http.Request) {
 	interestID, err = strconv.Atoi(interestIDParam)
 	if err != nil {
 		uh.log.Error("invalid interestID", zap.Int(consts.InterestIDURLParam.String(), interestID))
-		w.WriteHeader(http.StatusBadRequest)
+		uh.resp.WriteError(w, http.StatusBadRequest, ErrBadRequest)
 		return
 	}
 
@@ -302,18 +282,18 @@ func (uh *userHandlers) AddInterests(w http.ResponseWriter, r *http.Request) {
 		uh.log.Warn("failed to add interest", zap.Error(err))
 
 		if errors.Is(err, user.ErrInterestAlreadyExists) {
-			w.WriteHeader(http.StatusConflict)
+			uh.resp.WriteError(w, http.StatusConflict, user.ErrInterestAlreadyExists)
 			return
 		}
 
 		if errors.Is(err, user.ErrUserNotFound) || errors.Is(err, user.ErrInterestNotFound) {
-			w.WriteHeader(http.StatusBadRequest)
+			uh.resp.WriteError(w, http.StatusBadRequest, ErrBadRequest)
 			return
 		}
 
-		w.WriteHeader(http.StatusInternalServerError)
+		uh.resp.WriteError(w, http.StatusInternalServerError, ErrInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	uh.resp.WriteJSON(w, http.StatusOK, nil)
 }

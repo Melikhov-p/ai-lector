@@ -18,6 +18,14 @@ func NewInterest(n string, emoji string) *Interest {
 	}
 }
 
+func NewInterestFromDB(id int64, name string, emoji string) *Interest {
+	return &Interest{
+		id:    id,
+		name:  name,
+		emoji: emoji,
+	}
+}
+
 func (i *Interest) ID() int64 {
 	return i.id
 }

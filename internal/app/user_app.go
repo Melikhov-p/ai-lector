@@ -63,9 +63,10 @@ func (a *UserApp) SearchUser(ctx context.Context, filters user.UserFilter) ([]*u
 	const op = "app.UserApp.FindUser"
 
 	var (
-		usrs   []*user.User
-		inters []*interest.Interest
-		err    error
+		usrs      []*user.User
+		intersIDs []int64
+		inters    []*interest.Interest
+		err       error
 	)
 
 	usrs, err = a.userService.SearchUser(ctx, filters)
@@ -78,9 +79,14 @@ func (a *UserApp) SearchUser(ctx context.Context, filters user.UserFilter) ([]*u
 	}
 
 	for _, u := range usrs {
-		inters, err = a.userService.GetInterests(ctx, u)
+		intersIDs, err = a.userService.GetInterests(ctx, u)
 		if err != nil && errors.Is(err, sql.ErrNoRows) {
 			a.log.Error("Failed to get user interests", zap.Int64("UserID", u.ID()), zap.Error(err))
+		}
+
+		inters, err = a.interestApp.GetInterestsBatchByIDs(ctx, intersIDs)
+		if err != nil {
+			a.log.Error("Failed to get interests", zap.Int64("UserID", u.ID()), zap.Error(err))
 		}
 
 		u.SetInterests(inters)
@@ -93,9 +99,10 @@ func (a *UserApp) GetUserByID(ctx context.Context, userID int64) (*user.User, er
 	const op = "app.UserApp.GetUserByID"
 
 	var (
-		usr    *user.User
-		inters []*interest.Interest
-		err    error
+		usr       *user.User
+		intersIDs []int64
+		inters    []*interest.Interest
+		err       error
 	)
 
 	usr, err = a.userService.GetByID(ctx, userID)
@@ -103,9 +110,14 @@ func (a *UserApp) GetUserByID(ctx context.Context, userID int64) (*user.User, er
 		return nil, fmt.Errorf("%s failed to get user by ID with %w", op, err)
 	}
 
-	inters, err = a.userService.GetInterests(ctx, usr)
+	intersIDs, err = a.userService.GetInterests(ctx, usr)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
-		a.log.Error("Failed to get interests for user", zap.Int64("user_id", userID))
+		a.log.Error("Failed to get user interests", zap.Int64("UserID", usr.ID()), zap.Error(err))
+	}
+
+	inters, err = a.interestApp.GetInterestsBatchByIDs(ctx, intersIDs)
+	if err != nil {
+		a.log.Error("Failed to get interests", zap.Int64("UserID", usr.ID()), zap.Error(err))
 	}
 
 	usr.SetInterests(inters)
@@ -117,9 +129,10 @@ func (a *UserApp) GetUsersList(ctx context.Context) ([]*user.User, error) {
 	const op = "app.UserApp.GetUsersList"
 
 	var (
-		usrs   []*user.User
-		inters []*interest.Interest
-		err    error
+		usrs      []*user.User
+		intersIDs []int64
+		inters    []*interest.Interest
+		err       error
 	)
 
 	usrs, err = a.userService.GetUsersList(ctx)
@@ -132,9 +145,14 @@ func (a *UserApp) GetUsersList(ctx context.Context) ([]*user.User, error) {
 	}
 
 	for _, u := range usrs {
-		inters, err = a.userService.GetInterests(ctx, u)
+		intersIDs, err = a.userService.GetInterests(ctx, u)
 		if err != nil && errors.Is(err, sql.ErrNoRows) {
 			a.log.Error("Failed to get user interests", zap.Int64("UserID", u.ID()), zap.Error(err))
+		}
+
+		inters, err = a.interestApp.GetInterestsBatchByIDs(ctx, intersIDs)
+		if err != nil {
+			a.log.Error("Failed to get interests", zap.Int64("UserID", u.ID()), zap.Error(err))
 		}
 
 		u.SetInterests(inters)
@@ -147,9 +165,10 @@ func (a *UserApp) Auth(ctx context.Context, phone, password string) (*user.User,
 	const op = "app.UserApp.Auth"
 
 	var (
-		usr    *user.User
-		inters []*interest.Interest
-		err    error
+		usr       *user.User
+		intersIDs []int64
+		inters    []*interest.Interest
+		err       error
 	)
 
 	usr, err = a.userService.GetUserByPhone(ctx, phone)
@@ -162,9 +181,14 @@ func (a *UserApp) Auth(ctx context.Context, phone, password string) (*user.User,
 		return nil, fmt.Errorf("%s failed to compare user password with %w", op, err)
 	}
 
-	inters, err = a.userService.GetInterests(ctx, usr)
+	intersIDs, err = a.userService.GetInterests(ctx, usr)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		a.log.Error("Failed to get user interests", zap.Int64("UserID", usr.ID()), zap.Error(err))
+	}
+
+	inters, err = a.interestApp.GetInterestsBatchByIDs(ctx, intersIDs)
+	if err != nil {
+		a.log.Error("Failed to get interests", zap.Int64("UserID", usr.ID()), zap.Error(err))
 	}
 
 	usr.SetInterests(inters)
@@ -177,6 +201,7 @@ func (a *UserApp) AddInterest(ctx context.Context, userID, interestID int64) err
 
 	var (
 		inter      *interest.Interest
+		intersIDs  []int64
 		userInters []*interest.Interest
 		usr        *user.User
 		err        error
@@ -187,9 +212,14 @@ func (a *UserApp) AddInterest(ctx context.Context, userID, interestID int64) err
 		return fmt.Errorf("%s failed to get user by ID %w", op, err)
 	}
 
-	userInters, err = a.userService.GetInterests(ctx, usr)
-	if err != nil && !errors.Is(err, sql.ErrNoRows) && !errors.Is(err, user.ErrUserInterestsEmpty) {
-		return fmt.Errorf("%s failed to find interests for user with ID %d with %w", op, userID, err)
+	intersIDs, err = a.userService.GetInterests(ctx, usr)
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		a.log.Error("Failed to get user interests", zap.Int64("UserID", usr.ID()), zap.Error(err))
+	}
+
+	userInters, err = a.interestApp.GetInterestsBatchByIDs(ctx, intersIDs)
+	if err != nil {
+		a.log.Error("Failed to get interests", zap.Int64("UserID", usr.ID()), zap.Error(err))
 	}
 
 	usr.SetInterests(userInters)
@@ -215,9 +245,10 @@ func (a *UserApp) UpdateUser(ctx context.Context, userID int64, inDTO *dto.Updat
 	const op = "app.UserApp.UpdateUser"
 
 	var (
-		usr    *user.User
-		inters []*interest.Interest
-		err    error
+		usr       *user.User
+		intersIDs []int64
+		inters    []*interest.Interest
+		err       error
 	)
 
 	usr, err = a.userService.GetByID(ctx, userID)
@@ -230,9 +261,14 @@ func (a *UserApp) UpdateUser(ctx context.Context, userID int64, inDTO *dto.Updat
 		return nil, fmt.Errorf("%s failed to update user %w", op, err)
 	}
 
-	inters, err = a.userService.GetInterests(ctx, usr)
+	intersIDs, err = a.userService.GetInterests(ctx, usr)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
-		a.log.Error("Failed to get interests for user", zap.Int64("UserID", userID))
+		a.log.Error("Failed to get user interests", zap.Int64("UserID", usr.ID()), zap.Error(err))
+	}
+
+	inters, err = a.interestApp.GetInterestsBatchByIDs(ctx, intersIDs)
+	if err != nil {
+		a.log.Error("Failed to get interests", zap.Int64("UserID", usr.ID()), zap.Error(err))
 	}
 
 	usr.SetInterests(inters)

@@ -63,6 +63,29 @@ func (app *InterestApp) GetInterestByID(ctx context.Context, interestID int64) (
 	return inter, nil
 }
 
+// GetInterestsBatchByIDs получить несколько интересов по списку ID
+// TODO: переделать на поиск одним запросом вместо цикла
+func (app *InterestApp) GetInterestsBatchByIDs(ctx context.Context, intersIDs []int64) ([]*interest.Interest, error) {
+	const op = "app.Interest.GetInterestsBatchByIDs"
+
+	var (
+		inters []*interest.Interest
+		inter  *interest.Interest
+		err    error
+	)
+
+	for _, id := range intersIDs {
+		inter, err = app.interestService.GetByID(ctx, id)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("%s failed to get interest by ID: %w", op, err)
+		}
+
+		inters = append(inters, inter)
+	}
+
+	return inters, nil
+}
+
 // GetInterests получить все интересы
 func (app *InterestApp) GetInterests(ctx context.Context) ([]*interest.Interest, error) {
 	const op = "app.Interest.GetInterests"

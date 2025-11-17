@@ -14,6 +14,8 @@ type UpdateUserDTO struct {
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
 	Password  string `json:"password"`
+	Age       int    `json:"age"`
+	Class     int    `json:"class"`
 }
 
 // AuthUserDTO авторизация пользователя

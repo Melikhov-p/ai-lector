@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/Melikhov-p/ai-lector/internal/app"
 	"github.com/Melikhov-p/ai-lector/internal/domain/interest"
 	"github.com/Melikhov-p/ai-lector/internal/domain/user"
-	"github.com/Melikhov-p/ai-lector/internal/repository/memory"
+	"github.com/Melikhov-p/ai-lector/internal/repository/postgres"
 	"github.com/Melikhov-p/ai-lector/internal/transport/rest/handlers"
 	"github.com/Melikhov-p/ai-lector/internal/transport/rest/router"
 	"github.com/Melikhov-p/ai-lector/pkg/logger"
@@ -20,8 +21,14 @@ func main() {
 		panic("Logger")
 	}
 
-	store := memory.NewStorage()
-	createInterests(store)
+	store, err := postgres.NewPostgresStorage("postgresql://ai_lector:password@localhost:5433/ailector_app")
+	if err != nil {
+		panic(err)
+	}
+	log.Debug("postgres running", zap.Any("store", store))
+
+	//createInterests(store, log) НУЖНО ТОЛЬКО ПРИ ПЕРВОМ ЗАПУСКЕ
+	//log.Debug("created interests")
 
 	interestService := interest.NewService(store)
 	interestApp := app.NewInterestApp(interestService)
@@ -42,14 +49,25 @@ func main() {
 	}
 }
 
-func createInterests(store *memory.Storage) {
-	_ = store.SaveInterest(context.Background(), interest.NewInterest("футбол", "⚽️"))
-	_ = store.SaveInterest(context.Background(), interest.NewInterest("компьютерные игры", "🖥"))
-	_ = store.SaveInterest(context.Background(), interest.NewInterest("гимнастика", "🤸🏻‍♂️"))
-	_ = store.SaveInterest(context.Background(), interest.NewInterest("кино", "🎥"))
-	_ = store.SaveInterest(context.Background(), interest.NewInterest("скейтборд", "🛹"))
-	_ = store.SaveInterest(context.Background(), interest.NewInterest("музыка", "🎶"))
-	_ = store.SaveInterest(context.Background(), interest.NewInterest("машины", "🚘"))
-	_ = store.SaveInterest(context.Background(), interest.NewInterest("хоккей", "🏒"))
-	_ = store.SaveInterest(context.Background(), interest.NewInterest("баскетбол", "🏀"))
+func createInterests(store interest.Repository, log *zap.Logger) {
+	ins := []*interest.Interest{
+		interest.NewInterest("футбол", "⚽️"),
+		interest.NewInterest("компьютерные игры", "🖥"),
+		interest.NewInterest("гимнастика", "🤸🏻‍♂️"),
+		interest.NewInterest("кино", "🎥"),
+		interest.NewInterest("скейтборд", "🛹"),
+		interest.NewInterest("музыка", "🎶"),
+		interest.NewInterest("машины", "🚘"),
+		interest.NewInterest("хоккей", "🏒"),
+		interest.NewInterest("баскетбол", "🏀"),
+	}
+
+	for _, inter := range ins {
+		newID, err := store.SaveInterest(context.Background(), inter)
+		if err != nil {
+			log.Error("", zap.Error(err))
+		} else {
+			fmt.Println("newInterestID:", newID)
+		}
+	}
 }

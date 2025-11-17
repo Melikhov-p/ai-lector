@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// isValidEmail проверяет корректность email
+// IsValidEmail проверяет корректность email
 func IsValidEmail(email string) error {
 	// Простая регулярка для валидации email
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)

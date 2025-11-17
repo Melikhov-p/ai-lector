@@ -34,12 +34,12 @@ func FromInterestToInterestDTO(inter *interest.Interest) *dto.InterestDTO {
 	return &interDTO
 }
 
-//// FromSearchUserDTOtoUserFilter из транспортной модели поиска в доменный фильтр
-//func FromSearchUserDTOtoUserFilter(d dto.SearchUserDTO) user.UserFilter {
-//	return user.UserFilter{
-//		Email:     d.Email,
-//		Phone:     d.Phone,
-//		FirstName: d.FirstName,
-//		LastName:  d.LastName,
-//	}
-//}
+// // FromSearchUserDTOtoUserFilter из транспортной модели поиска в доменный фильтр
+// func FromSearchUserDTOtoUserFilter(d dto.SearchUserDTO) user.UserFilter {
+// 	return user.UserFilter{
+// 		Email:     d.Email,
+// 		Phone:     d.Phone,
+// 		FirstName: d.FirstName,
+// 		LastName:  d.LastName,
+// 	}
+// }

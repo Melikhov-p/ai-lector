@@ -19,6 +19,7 @@ type User struct {
 	firstName     string
 	lastName      string
 	age           int
+	class         int // класс
 	createdAt     time.Time
 	updatedAt     time.Time
 	interests     []*interest.Interest
@@ -38,6 +39,7 @@ func NewUser(phone, firstName string, passHash []byte) (*User, error) {
 	}, nil
 }
 
+// NewUserFromDB метод для сканирования полей дб в модель пользователя
 func NewUserFromDB(
 	id int64,
 	uuid uuid.UUID,
@@ -47,7 +49,7 @@ func NewUserFromDB(
 	passHash []byte,
 	firstName string,
 	lastName string,
-	age int,
+	age, class int,
 	createdAt time.Time,
 	updatedAt time.Time,
 ) *User {
@@ -61,6 +63,7 @@ func NewUserFromDB(
 		firstName:     firstName,
 		lastName:      lastName,
 		age:           age,
+		class:         class,
 		createdAt:     createdAt,
 		updatedAt:     updatedAt,
 	}
@@ -118,6 +121,15 @@ func (u *User) Age() int {
 // SetAge установить возраст клиента
 func (u *User) SetAge(age int) {
 	u.age = age
+}
+
+// Class в каком классе пользователь
+func (u *User) Class() int {
+	return u.class
+}
+
+func (u *User) SetClass(class int) {
+	u.class = class
 }
 
 // TrialRequests возвращает количество пробных запросов пользователя

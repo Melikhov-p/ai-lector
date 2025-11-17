@@ -8,8 +8,8 @@ import (
 
 // Repository определяет интерфейс для работы с хранилищем пользователей
 type Repository interface {
-	// SaveUser создаёт нового пользователя
-	SaveUser(ctx context.Context, user *User) error
+	// SaveUser сохраняет нового пользователя
+	SaveUser(ctx context.Context, user *User) (int64, error)
 
 	// GetUserByID возвращает пользователя по внешнему ID
 	GetUserByID(ctx context.Context, userID int64) (*User, error)
@@ -22,7 +22,7 @@ type Repository interface {
 
 	AddInterestToUser(ctx context.Context, userID int64, inter *interest.Interest) error
 
-	GetUserInterestsByID(ctx context.Context, userID int64) ([]*interest.Interest, error)
+	GetUserInterestsByID(ctx context.Context, userID int64) ([]int64, error)
 
 	UpdateUser(ctx context.Context, user *User) error
 }
@@ -33,14 +33,4 @@ type ListOptions struct {
 	Offset int    // Смещение
 	SortBy string // Поле для сортировки (id, email, name, created_at)
 	Order  string // Порядок сортировки (asc, desc)
-}
-
-// DefaultListOptions возвращает опции по умолчанию
-func DefaultListOptions() ListOptions {
-	return ListOptions{
-		Limit:  20,
-		Offset: 0,
-		SortBy: "id",
-		Order:  "asc",
-	}
 }

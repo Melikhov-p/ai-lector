@@ -30,6 +30,7 @@ func (s *Service) CreateUser(ctx context.Context, phone, firstName, password str
 	var (
 		normPhone string
 		usr       *User
+		newUserID int64
 		passHash  []byte
 		err       error
 	)
@@ -55,9 +56,11 @@ func (s *Service) CreateUser(ctx context.Context, phone, firstName, password str
 	}
 
 	// Сохранение в репозиторий
-	if err = s.repo.SaveUser(ctx, usr); err != nil {
+	if newUserID, err = s.repo.SaveUser(ctx, usr); err != nil {
 		return nil, fmt.Errorf("failed to save user: %w", err)
 	}
+
+	usr.SetID(newUserID)
 
 	return usr, nil
 }
@@ -158,17 +161,17 @@ func (s *Service) AddInterest(ctx context.Context, usr *User, inter *interest.In
 	return nil
 }
 
-func (s *Service) GetInterests(ctx context.Context, usr *User) ([]*interest.Interest, error) {
+func (s *Service) GetInterests(ctx context.Context, usr *User) ([]int64, error) {
 	const op = "domain.UserService.GetInterests"
 
 	var (
-		inters []*interest.Interest
+		inters []int64
 		err    error
 	)
 
 	inters, err = s.repo.GetUserInterestsByID(ctx, usr.ID())
 	if err != nil {
-		return []*interest.Interest{}, fmt.Errorf("%s failed to get interests for user %w", op, err)
+		return nil, fmt.Errorf("%s failed to get interests for user %w", op, err)
 	}
 
 	return inters, nil
@@ -212,6 +215,12 @@ func (s *Service) UpdateUser(ctx context.Context, usr *User, inDTO *dto.UpdateUs
 		}
 
 		usr.passHash = passHash
+	}
+	if inDTO.Age != 0 {
+		usr.age = inDTO.Age
+	}
+	if inDTO.Class != 0 {
+		usr.class = inDTO.Class
 	}
 
 	err = s.repo.UpdateUser(ctx, usr)
