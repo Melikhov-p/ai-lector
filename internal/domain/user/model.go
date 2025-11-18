@@ -142,6 +142,17 @@ func (u *User) Interests() []*interest.Interest {
 	return u.interests
 }
 
+// InterestsNames возвращает массив названий интересов пользователя
+func (u *User) InterestsNames() []string {
+	interestsNames := make([]string, len(u.interests))
+
+	for i, inter := range u.interests {
+		interestsNames[i] = inter.Name()
+	}
+
+	return interestsNames
+}
+
 // SetInterests установить пользователю интересы
 func (u *User) SetInterests(inters []*interest.Interest) {
 	u.interests = inters

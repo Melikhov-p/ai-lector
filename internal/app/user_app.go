@@ -275,3 +275,15 @@ func (a *UserApp) UpdateUser(ctx context.Context, userID int64, inDTO *dto.Updat
 
 	return usr, nil
 }
+
+// DenyTrialRequest убрать 1 пробный запрос у пользователя
+func (a *UserApp) DenyTrialRequest(ctx context.Context, usr *user.User) error {
+	const op = "app.UserApp.removeTrialRequest"
+
+	err := a.userService.DenyTrialRequest(ctx, usr, 1)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}

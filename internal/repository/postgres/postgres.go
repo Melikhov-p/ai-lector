@@ -412,7 +412,7 @@ func (s *Storage) AddInterestToUser(ctx context.Context, userID int64, inter *in
 
 	query := `INSERT INTO users_interests (user_id, interest_id) VALUES ($1, $2)`
 
-	_, err := s.db.ExecContext(ctx, query, userID, inter.ID)
+	_, err := s.db.ExecContext(ctx, query, userID, inter.ID())
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

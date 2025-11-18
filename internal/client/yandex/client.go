@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/Melikhov-p/ai-lector/internal/client"
@@ -37,10 +36,14 @@ func (c *Client) MakeRequest(req string) (string, error) {
 
 	body, _ := json.Marshal(clientReq)
 
-	r, err := http.NewRequest("GET", req, bytes.NewBuffer(body))
+	r, err := http.NewRequest("GET", c.Address, bytes.NewBuffer(body))
 	if err != nil {
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
+	r.Header.Set("Content-Type", "application/json")
+	r.Header.Set("Accept", "application/json")
+	r.Header.Set("Authorization", "Bearer "+c.Token)
+	r.Header.Set("OpenAI-Project", "b1gm2onh41hvp1g7idq")
 
 	resp, err := c.Web.Do(r)
 	if err != nil {
@@ -50,10 +53,10 @@ func (c *Client) MakeRequest(req string) (string, error) {
 		_ = resp.Body.Close()
 	}()
 
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
+	var rm ResponseMessage
+	if err = json.NewDecoder(resp.Body).Decode(&rm); err != nil {
 		return "", fmt.Errorf("%s: %w", op, err)
+	} else {
+		return rm.Choices[0].Message.Content, nil
 	}
-
-	return string(respBody), nil
 }

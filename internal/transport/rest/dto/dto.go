@@ -58,3 +58,7 @@ type SearchUserDTO struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name,omitempty"`
 }
+
+type ExplainDTO struct {
+	Explanation string `json:"explanation"`
+}

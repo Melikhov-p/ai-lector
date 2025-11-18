@@ -36,9 +36,12 @@ func NewRouter(handler *handlers.Handlers, l *zap.Logger) *chi.Mux {
 
 		r.With(mw.IsOwner).Route(buildPatternWithID(consts.UserIDURLParam), func(r chi.Router) { // корень эндпоинтов конкретного пользователя
 			r.Get("/", handler.ForUser.GetByID)       // получить конкретного пользователя
+			r.Put("/", handler.ForUser.UpdateUser)    // обновить данные пользователя
 			r.Route("/interest", func(r chi.Router) { // корень эндпоинтов для интересов конкретного пользователя
 				r.Post(buildPatternWithID(consts.InterestIDURLParam), handler.ForUser.AddInterests) // добавить интерес пользователю
 			})
+
+			r.Get("/get_explain", handler.ForExplain.GetExplain) // получить объяснение для конкретного пользователя
 		})
 	})
 

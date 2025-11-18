@@ -236,3 +236,17 @@ func (s *Service) UpdateUser(ctx context.Context, usr *User, inDTO *dto.UpdateUs
 
 	return nil
 }
+
+// DenyTrialRequest убавить пробные запросы
+func (s *Service) DenyTrialRequest(ctx context.Context, usr *User, count int) error {
+	const op = "domain.UserService.DenyTrialRequest"
+
+	usr.trialRequests -= count
+
+	err := s.repo.UpdateUser(ctx, usr)
+	if err != nil {
+		return fmt.Errorf("%s failed to update user with %w", op, err)
+	}
+
+	return nil
+}
