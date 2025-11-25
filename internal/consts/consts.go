@@ -9,8 +9,9 @@ const (
 )
 
 const (
-	UserIDURLParam     URLParam = "userID"
-	InterestIDURLParam URLParam = "interestID"
+	UserIDURLParam      URLParam = "userID"
+	InterestIDURLParam  URLParam = "interestID"
+	SubscriptionIDParam URLParam = "subscriptionID"
 )
 
 const Instruction = `Ты — умный помощник, который объясняет темы из учебников. Пользователь вводит название учебника и тему, а ты находишь соответствующий материал и объясняешь его понятно и наглядно, используя примеры и аналогии, максимально релевантные интересам пользователя.

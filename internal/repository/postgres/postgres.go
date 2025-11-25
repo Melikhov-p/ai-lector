@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Melikhov-p/ai-lector/internal/domain/interest"
+	"github.com/Melikhov-p/ai-lector/internal/domain/subscription"
 	"github.com/Melikhov-p/ai-lector/internal/domain/user"
 	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -492,6 +493,23 @@ WHERE uuid = $1;`
 	}
 	if rowsAffected == 0 {
 		return fmt.Errorf("%s: user with uuid %s not found", op, usr.UUID())
+	}
+
+	return nil
+}
+
+func (s *Storage) SubscribeUser(ctx context.Context, usrSub *subscription.UserSubscription) error {
+	const op = "repository.postgres.SubscribeUser"
+
+	query := `INSERT INTO users_subscriptions (user_id, sub_id, created_at, end_at, payed) VALUES ($1, $2, $3, $4, $5)`
+
+	_, err := s.db.ExecContext(
+		ctx,
+		query,
+		usrSub.UserID(), usrSub.SubID(), usrSub.CreatedAt(), usrSub.EndAt(), usrSub.Payed(),
+	)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	return nil

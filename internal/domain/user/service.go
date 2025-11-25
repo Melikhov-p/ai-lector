@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/Melikhov-p/ai-lector/internal/domain/interest"
+	"github.com/Melikhov-p/ai-lector/internal/domain/subscription"
 	"github.com/Melikhov-p/ai-lector/internal/transport/rest/dto"
 	"github.com/Melikhov-p/ai-lector/internal/util"
 	"golang.org/x/crypto/bcrypt"
@@ -163,7 +164,7 @@ func (s *Service) AddInterest(ctx context.Context, usr *User, inter *interest.In
 
 // GetInterests получить интересы пользователя
 func (s *Service) GetInterests(ctx context.Context, usr *User) ([]int64, error) {
-	const op = "domain.UserService.GetInterests"
+	const op = "user.service.GetInterests"
 
 	var (
 		inters []int64
@@ -191,7 +192,7 @@ func (s *Service) CheckUserInterestByID(usr *User, interID int64) bool {
 
 // UpdateUser обновить пользователя
 func (s *Service) UpdateUser(ctx context.Context, usr *User, inDTO *dto.UpdateUserDTO) error {
-	const op = "domain.UserService.UpdateUser"
+	const op = "user.service.UpdateUser"
 
 	var (
 		passHash []byte
@@ -239,13 +240,32 @@ func (s *Service) UpdateUser(ctx context.Context, usr *User, inDTO *dto.UpdateUs
 
 // DenyTrialRequest убавить пробные запросы
 func (s *Service) DenyTrialRequest(ctx context.Context, usr *User, count int) error {
-	const op = "domain.UserService.DenyTrialRequest"
+	const op = "user.service.DenyTrialRequest"
 
 	usr.trialRequests -= count
 
 	err := s.repo.UpdateUser(ctx, usr)
 	if err != nil {
 		return fmt.Errorf("%s failed to update user with %w", op, err)
+	}
+
+	return nil
+}
+
+// Subscribe оформить подписку для пользователя
+func (s *Service) Subscribe(ctx context.Context, usr *User, sub *subscription.Subscription) error {
+	const op = "user.service.Subscribe"
+
+	var (
+		userSub *subscription.UserSubscription
+		err     error
+	)
+
+	userSub = subscription.NewUserSubscription(usr.ID(), sub)
+
+	err = s.repo.SubscribeUser(ctx, userSub)
+	if err != nil {
+		return fmt.Errorf("%s failed to subscribe to user with %w", op, err)
 	}
 
 	return nil

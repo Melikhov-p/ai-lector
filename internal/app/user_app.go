@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/Melikhov-p/ai-lector/internal/domain/interest"
+	"github.com/Melikhov-p/ai-lector/internal/domain/subscription"
 	"github.com/Melikhov-p/ai-lector/internal/domain/user"
 	"github.com/Melikhov-p/ai-lector/internal/transport/rest/dto"
 	"go.uber.org/zap"
@@ -18,6 +19,7 @@ import (
 type UserApp struct {
 	userService *user.Service
 	interestApp *InterestApp
+	subApp      *SubscriptionApp
 	log         *zap.Logger
 }
 
@@ -281,6 +283,33 @@ func (a *UserApp) DenyTrialRequest(ctx context.Context, usr *user.User) error {
 	const op = "app.UserApp.removeTrialRequest"
 
 	err := a.userService.DenyTrialRequest(ctx, usr, 1)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
+func (a *UserApp) Subscribe(ctx context.Context, userID, subID int64) error {
+	const op = "app.UserApp.subscribe"
+
+	var (
+		usr *user.User
+		sub *subscription.Subscription
+		err error
+	)
+
+	usr, err = a.userService.GetByID(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("%s failed to get user by ID %w", op, err)
+	}
+
+	sub, err = a.subApp.GetSubscriptionByID(ctx, subID)
+	if err != nil {
+		return fmt.Errorf("%s failed to get subscription by ID %w", op, err)
+	}
+
+	err = a.userService.Subscribe(ctx, usr, sub)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

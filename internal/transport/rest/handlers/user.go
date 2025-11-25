@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -291,6 +292,44 @@ func (uh *userHandlers) AddInterests(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		uh.resp.WriteError(w, http.StatusInternalServerError, ErrInternalServerError)
+		return
+	}
+
+	uh.resp.WriteJSON(w, http.StatusOK, nil)
+}
+
+func (uh *userHandlers) RemoveInterest(w http.ResponseWriter, r *http.Request) {
+	_, _ = w.Write([]byte("NOT IMPLEMENTED"))
+}
+
+// Subscribe оформить подписку
+func (uh *userHandlers) Subscribe(w http.ResponseWriter, r *http.Request) {
+	var (
+		userID              int64
+		subscriptionIDParam string
+		subscriptionID      int
+		err                 error
+		ok                  bool
+	)
+
+	userID, ok = r.Context().Value(consts.UserIDContextKey).(int64)
+	if !ok {
+		uh.log.Error("invalid user ID in context", zap.Int64("UserID", userID))
+		uh.resp.WriteError(w, http.StatusBadRequest, ErrBadRequest)
+		return
+	}
+
+	subscriptionIDParam = chi.URLParam(r, consts.SubscriptionIDParam.String())
+	subscriptionID, err = strconv.Atoi(subscriptionIDParam)
+
+	err = uh.userApp.Subscribe(context.Background(), userID, int64(subscriptionID))
+	if err != nil {
+		uh.log.Warn(
+			"failed to subscribe to subscription",
+			zap.Error(err),
+			zap.Int64("UserID", userID),
+			zap.Int("SubscriptionID", subscriptionID))
 		uh.resp.WriteError(w, http.StatusInternalServerError, ErrInternalServerError)
 		return
 	}

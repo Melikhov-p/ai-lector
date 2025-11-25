@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Melikhov-p/ai-lector/internal/domain/interest"
+	"github.com/Melikhov-p/ai-lector/internal/domain/subscription"
 )
 
 // Repository определяет интерфейс для работы с хранилищем пользователей
@@ -25,6 +26,7 @@ type Repository interface {
 	GetUserInterestsByID(ctx context.Context, userID int64) ([]int64, error)
 
 	UpdateUser(ctx context.Context, user *User) error
+	SubscribeUser(ctx context.Context, usrSub *subscription.UserSubscription) error
 }
 
 // ListOptions опции для получения списка пользователей
